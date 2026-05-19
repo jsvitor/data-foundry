@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 
 from data_foundry.config import BRONZE_DIR, GOLD_DIR, SILVER_DIR
+from data_foundry.quality import FieldCheck, run_quality_gate
+from data_foundry.schemas.gold import GoldLocalizedEntry
 
 
 def load_json(path: Path) -> dict | list:
@@ -9,6 +11,13 @@ def load_json(path: Path) -> dict | list:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
     return [] if path.name == "catalog.json" else {}
+
+
+# Fields that must be present and their acceptable null-rate ceilings.
+QUALITY_CHECKS = [
+    FieldCheck("title.pt", max_null_rate=0.0),   # always sourced from bronze
+    FieldCheck("description.pt", max_null_rate=0.5),  # LLM-generated; 50 % tolerance
+]
 
 
 def main():
@@ -49,6 +58,15 @@ def main():
             "source": entry.get("source"),
         }
         localized.append(record)
+
+    # Quality gate — hard stop when structural or null-rate thresholds breach.
+    run_quality_gate(
+        localized,
+        GoldLocalizedEntry,
+        QUALITY_CHECKS,
+        label="localized_catalog",
+        halt_on_failure=True,
+    )
 
     output_path = GOLD_DIR / "localized_catalog.json"
     with open(output_path, "w", encoding="utf-8") as f:

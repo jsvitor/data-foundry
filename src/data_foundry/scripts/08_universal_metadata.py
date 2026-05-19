@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 
 from data_foundry.config import BRONZE_DIR, GOLD_DIR, PDF_DIR, SILVER_DIR
+from data_foundry.quality import FieldCheck, run_quality_gate
+from data_foundry.schemas.gold import GoldUniversalEntry
 
 
 def load_json(path: Path) -> dict | list:
@@ -57,6 +59,18 @@ def main():
             "download_url": meta.get("download_url") or entry.get("download_url"),
         }
         metadata_records.append(record)
+
+    # Quality gate — hard stop when structural or null-rate thresholds breach.
+    run_quality_gate(
+        metadata_records,
+        GoldUniversalEntry,
+        [
+            FieldCheck("download_url", max_null_rate=0.0),   # must always have a URL
+            FieldCheck("document_hash", max_null_rate=0.5),  # depends on download success
+        ],
+        label="universal_metadata",
+        halt_on_failure=True,
+    )
 
     output_path = GOLD_DIR / "universal_metadata.json"
     with open(output_path, "w", encoding="utf-8") as f:
