@@ -5,14 +5,14 @@ from pathlib import Path
 SCRIPTS_DIR = Path(__file__).resolve().parent / "scripts"
 
 STEPS = [
-    ("01_download.py", "Scrape catalog and download PDFs"),
-    ("02_hash.py", "Calculate document hashes"),
-    ("03_describe.py", "Generate descriptions via vision LLM"),
-    ("04_translate.py", "Translate titles"),
-    ("05_translate_descriptions.py", "Translate descriptions"),
-    ("06_covers.py", "Extract cover pages"),
-    ("07_localized_catalog.py", "Assemble localized catalog"),
-    ("08_universal_metadata.py", "Assemble universal metadata"),
+    ("01_download.py", "Scrape catalog and download PDFs", True),
+    ("02_hash.py", "Calculate document hashes", True),
+    ("03_describe.py", "Generate descriptions via vision LLM", False),
+    ("04_translate.py", "Translate titles", False),
+    ("05_translate_descriptions.py", "Translate descriptions", False),
+    ("06_covers.py", "Extract cover pages", False),
+    ("07_localized_catalog.py", "Assemble localized catalog", True),
+    ("08_universal_metadata.py", "Assemble universal metadata", True),
 ]
 
 
@@ -34,20 +34,25 @@ def main():
     print("=" * 60)
 
     results = {}
-    for script, description in STEPS:
+    for script, description, critical in STEPS:
         success = run_step(script, description)
-        results[script] = "ok" if success else "failed"
 
-        if not success:
-            print(f"\nStep failed: {script}. Stopping pipeline.")
+        if success:
+            results[script] = "ok"
+        elif critical:
+            results[script] = "failed:halt"
+            print(f"\n[CRITICAL] {script} failed. Stopping pipeline.")
             break
+        else:
+            results[script] = "failed:skipped"
+            print(f"\n[WARNING] {script} failed. Continuing with reduced output.")
 
     print(f"\n{'=' * 60}")
     print("Pipeline Summary")
     print(f"{'=' * 60}")
+    icons = {"ok": "+", "failed:halt": "X", "failed:skipped": "~"}
     for script, status in results.items():
-        icon = {"ok": "+", "failed": "X"}[status]
-        print(f"  [{icon}] {script}: {status}")
+        print(f"  [{icons[status]}] {script}: {status}")
 
 
 if __name__ == "__main__":
