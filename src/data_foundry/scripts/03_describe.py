@@ -1,5 +1,7 @@
 import base64
 import json
+import os
+from datetime import datetime, timezone
 from pathlib import Path
 
 import fitz
@@ -12,6 +14,8 @@ from data_foundry.config import (
     OUTPUT_DIR,
     PDF_DIR,
 )
+
+RUN_ID = os.getenv("RUN_ID", "unknown")
 
 MAX_PAGES = 1
 
@@ -132,6 +136,13 @@ def main():
                 "title": title,
                 "description": None,
                 "error": "render_failed",
+                "llm_metadata": {
+                    "model": LLM_MODEL,
+                    "base_url": LLM_BASE_URL,
+                    "run_id": RUN_ID,
+                    "generated_at": datetime.now(timezone.utc).isoformat(),
+                    "vision_used": False,
+                },
             }
             continue
 
@@ -141,6 +152,13 @@ def main():
         descriptions[code] = {
             "title": title,
             "description": description,
+            "llm_metadata": {
+                "model": LLM_MODEL,
+                "base_url": LLM_BASE_URL,
+                "run_id": RUN_ID,
+                "generated_at": datetime.now(timezone.utc).isoformat(),
+                "vision_used": len(images) > 0,
+            },
         }
 
         with open(desc_path, "w", encoding="utf-8") as f:
