@@ -63,7 +63,9 @@ gold/    — consumer-facing output datasets
 ```
 
 Layer boundaries are natural quality checkpoints. A silver-to-gold gate
-(null rate checks, schema validation) has an obvious place to live.
+runs before writing gold outputs: Pydantic validates every record's structure,
+and null-rate thresholds (e.g. `title.pt` must be 0% null, `description.pt`
+below 50%) trigger a hard stop with a structured report when breached.
 Cover paths are stored as keys relative to `DATA_DIR` (e.g. `silver/covers/abc.png`),
 which map directly to S3 object keys when cloud storage is introduced.
 
@@ -150,4 +152,4 @@ Parquet + Iceberg on S3 is the production path.
 |---|---|
 | Data Architecture | Medallion layers (raw/bronze/silver/gold), explicit layer boundaries, cover paths S3-ready |
 | Versioning | `run_id` on every output, `runs.jsonl` event audit log, `llm_metadata` per LLM-generated record |
-| Data Quality | Critical vs non-critical failure contract, `vision_used` flag for LLM auditability |
+| Data Quality | Critical vs non-critical failure contract, `vision_used` flag for LLM auditability, Pydantic schemas per medallion layer, silver-to-gold null-rate gate, content quality tests |
