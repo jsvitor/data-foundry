@@ -1,27 +1,27 @@
 import json
+from pathlib import Path
 
-from data_foundry.config import OUTPUT_DIR
+from data_foundry.config import BRONZE_DIR, GOLD_DIR, SILVER_DIR
 
 
-def load_json(name: str) -> dict | list:
-    path = OUTPUT_DIR / name
+def load_json(path: Path) -> dict | list:
     if path.exists():
         with open(path, encoding="utf-8") as f:
             return json.load(f)
-    return {} if name != "catalog.json" else []
+    return [] if path.name == "catalog.json" else {}
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    GOLD_DIR.mkdir(parents=True, exist_ok=True)
 
-    catalog = load_json("catalog.json")
+    catalog = load_json(BRONZE_DIR / "catalog.json")
     if not catalog:
         print("catalog.json not found. Run 01_download.py first.")
         return
 
-    translations = load_json("translations.json")
-    descriptions = load_json("descriptions.json")
-    desc_translations = load_json("description_translations.json")
+    translations = load_json(SILVER_DIR / "translations.json")
+    descriptions = load_json(SILVER_DIR / "descriptions.json")
+    desc_translations = load_json(SILVER_DIR / "description_translations.json")
 
     localized = []
     for entry in catalog:
@@ -50,7 +50,7 @@ def main():
         }
         localized.append(record)
 
-    output_path = OUTPUT_DIR / "localized_catalog.json"
+    output_path = GOLD_DIR / "localized_catalog.json"
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(localized, f, ensure_ascii=False, indent=2)
 

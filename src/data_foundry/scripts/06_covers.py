@@ -4,9 +4,9 @@ from pathlib import Path
 
 import fitz
 
-from data_foundry.config import DATA_DIR, OUTPUT_DIR, PDF_DIR
+from data_foundry.config import DATA_DIR, PDF_DIR, SILVER_DIR
 
-COVERS_DIR = DATA_DIR / "covers"
+COVERS_DIR = SILVER_DIR / "covers"
 
 
 def extract_cover(pdf_path: Path) -> tuple[Path | None, str | None]:
@@ -29,14 +29,14 @@ def extract_cover(pdf_path: Path) -> tuple[Path | None, str | None]:
 
 def main():
     COVERS_DIR.mkdir(parents=True, exist_ok=True)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    SILVER_DIR.mkdir(parents=True, exist_ok=True)
 
     pdf_files = sorted(PDF_DIR.glob("*.pdf"))
     if not pdf_files:
-        print("No PDFs found in data/pdfs/. Run 01_download.py first.")
+        print("No PDFs found in data/raw/pdfs/. Run 01_download.py first.")
         return
 
-    covers_path = OUTPUT_DIR / "covers.json"
+    covers_path = SILVER_DIR / "covers.json"
     if covers_path.exists():
         with open(covers_path, encoding="utf-8") as f:
             covers = json.load(f)

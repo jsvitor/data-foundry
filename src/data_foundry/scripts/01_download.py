@@ -9,8 +9,8 @@ from playwright.sync_api import sync_playwright
 
 from data_foundry.config import (
     BASE_URL,
+    BRONZE_DIR,
     LIST_URL,
-    OUTPUT_DIR,
     PDF_DIR,
 )
 
@@ -179,7 +179,7 @@ def main():
     # For example, you could have a `fetcher.py` for all fetching logic, a `parser.py` for parsing HTML and extracting data, and a `downloader.py` for handling file downloads. The main script would then orchestrate these components without needing to know the details of how they work internally.
     # Today it's all mixed together here, so this script also has a orchestration responsability - hidden orchestrations.
     PDF_DIR.mkdir(parents=True, exist_ok=True)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    BRONZE_DIR.mkdir(parents=True, exist_ok=True)
     # FIXME: [critical][all functions] It's unaceptable that the script not rise an error on this case
     #        This can lead to silent failures and data loss
     print("Fetching listing page...")
@@ -231,11 +231,11 @@ def main():
 
         catalog.append(entry)
 
-    catalog_path = OUTPUT_DIR / "catalog.json"
+    catalog_path = BRONZE_DIR / "catalog.json"
     with open(catalog_path, "w", encoding="utf-8") as f:
         json.dump(catalog, f, ensure_ascii=False, indent=2)
 
-    metadata_path = OUTPUT_DIR / "metadata.json"
+    metadata_path = BRONZE_DIR / "metadata.json"
     with open(metadata_path, "w", encoding="utf-8") as f:
         json.dump(all_metadata, f, ensure_ascii=False, indent=2)
 

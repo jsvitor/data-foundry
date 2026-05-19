@@ -6,10 +6,9 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from data_foundry.config import DATA_DIR, LLM_BASE_URL, LLM_MODEL, OUTPUT_DIR
+from data_foundry.config import GOLD_DIR, LLM_BASE_URL, LLM_MODEL, META_DIR
 
 SCRIPTS_DIR = Path(__file__).resolve().parent / "scripts"
-META_DIR = DATA_DIR / "meta"
 RUNS_LOG = META_DIR / "runs.jsonl"
 
 STEPS = [
@@ -24,8 +23,8 @@ STEPS = [
 ]
 
 OUTPUT_FILES = [
-    OUTPUT_DIR / "localized_catalog.json",
-    OUTPUT_DIR / "universal_metadata.json",
+    GOLD_DIR / "localized_catalog.json",
+    GOLD_DIR / "universal_metadata.json",
 ]
 
 

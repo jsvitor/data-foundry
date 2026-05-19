@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from openai import OpenAI
 
-from data_foundry.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, OUTPUT_DIR
+from data_foundry.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, SILVER_DIR
 
 RUN_ID = os.getenv("RUN_ID", "unknown")
 
@@ -33,9 +33,9 @@ def translate_text(text: str, target_lang: str) -> str | None:
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    SILVER_DIR.mkdir(parents=True, exist_ok=True)
 
-    desc_path = OUTPUT_DIR / "descriptions.json"
+    desc_path = SILVER_DIR / "descriptions.json"
     if not desc_path.exists():
         print("descriptions.json not found. Run 03_describe.py first.")
         return
@@ -43,7 +43,7 @@ def main():
     with open(desc_path, encoding="utf-8") as f:
         descriptions = json.load(f)
 
-    trans_path = OUTPUT_DIR / "description_translations.json"
+    trans_path = SILVER_DIR / "description_translations.json"
     if trans_path.exists():
         with open(trans_path, encoding="utf-8") as f:
             translations = json.load(f)

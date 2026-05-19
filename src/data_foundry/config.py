@@ -15,8 +15,16 @@ LIST_URL = (
 )
 
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
-PDF_DIR = DATA_DIR / "pdfs"
-OUTPUT_DIR = DATA_DIR / "output"
+
+# Medallion layers
+RAW_DIR    = DATA_DIR / "raw"
+BRONZE_DIR = DATA_DIR / "bronze"
+SILVER_DIR = DATA_DIR / "silver"
+GOLD_DIR   = DATA_DIR / "gold"
+META_DIR   = DATA_DIR / "meta"
+
+# Convenience aliases
+PDF_DIR = RAW_DIR / "pdfs"
 
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "http://localhost:11434/v1")
 LLM_API_KEY = os.getenv("LLM_API_KEY", "ollama")

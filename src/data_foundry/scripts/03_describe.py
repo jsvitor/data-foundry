@@ -8,11 +8,12 @@ import fitz
 from openai import OpenAI
 
 from data_foundry.config import (
+    BRONZE_DIR,
     LLM_API_KEY,
     LLM_BASE_URL,
     LLM_MODEL,
-    OUTPUT_DIR,
     PDF_DIR,
+    SILVER_DIR,
 )
 
 RUN_ID = os.getenv("RUN_ID", "unknown")
@@ -85,9 +86,9 @@ def describe_document(
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    SILVER_DIR.mkdir(parents=True, exist_ok=True)
 
-    catalog_path = OUTPUT_DIR / "catalog.json"
+    catalog_path = BRONZE_DIR / "catalog.json"
     if catalog_path.exists():
         with open(catalog_path, encoding="utf-8") as f:
             catalog = {e["code"]: e for e in json.load(f)}
@@ -95,7 +96,7 @@ def main():
         catalog = {}
         print("Warning: catalog.json not found. Titles will be 'Unknown'.")
 
-    metadata_path = OUTPUT_DIR / "metadata.json"
+    metadata_path = BRONZE_DIR / "metadata.json"
     if metadata_path.exists():
         with open(metadata_path, encoding="utf-8") as f:
             metadata = json.load(f)
@@ -107,10 +108,10 @@ def main():
 
     pdf_files = sorted(PDF_DIR.glob("*.pdf"))
     if not pdf_files:
-        print("No PDFs found in data/pdfs/. Run 01_download.py first.")
+        print("No PDFs found in data/raw/pdfs/. Run 01_download.py first.")
         return
 
-    desc_path = OUTPUT_DIR / "descriptions.json"
+    desc_path = SILVER_DIR / "descriptions.json"
     if desc_path.exists():
         with open(desc_path, encoding="utf-8") as f:
             descriptions = json.load(f)

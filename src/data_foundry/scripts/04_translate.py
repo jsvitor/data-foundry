@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from openai import OpenAI
 
-from data_foundry.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, OUTPUT_DIR
+from data_foundry.config import BRONZE_DIR, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, SILVER_DIR
 
 RUN_ID = os.getenv("RUN_ID", "unknown")
 
@@ -53,9 +53,9 @@ def translate_title(
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    SILVER_DIR.mkdir(parents=True, exist_ok=True)
 
-    catalog_path = OUTPUT_DIR / "catalog.json"
+    catalog_path = BRONZE_DIR / "catalog.json"
     if not catalog_path.exists():
         print("catalog.json not found. Run 01_download.py first.")
         return
@@ -63,14 +63,14 @@ def main():
     with open(catalog_path, encoding="utf-8") as f:
         catalog = json.load(f)
 
-    metadata_path = OUTPUT_DIR / "metadata.json"
+    metadata_path = BRONZE_DIR / "metadata.json"
     if metadata_path.exists():
         with open(metadata_path, encoding="utf-8") as f:
             metadata = json.load(f)
     else:
         metadata = {}
 
-    trans_path = OUTPUT_DIR / "translations.json"
+    trans_path = SILVER_DIR / "translations.json"
     if trans_path.exists():
         with open(trans_path, encoding="utf-8") as f:
             translations = json.load(f)
