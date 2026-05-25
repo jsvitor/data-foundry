@@ -143,13 +143,3 @@ reduce total pipeline time significantly at scale.
 **JSON at 10 documents**
 At 1000+ documents: slow reads/writes, no schema enforcement, no ACID guarantees.
 Parquet + Iceberg on S3 is the production path.
-
----
-
-## Challenge targets covered
-
-| Target | Implementation |
-|---|---|
-| Data Architecture | Medallion layers (raw/bronze/silver/gold), explicit layer boundaries, cover paths S3-ready |
-| Versioning | `run_id` on every output, `runs.jsonl` event audit log, `llm_metadata` per LLM-generated record |
-| Data Quality | Critical vs non-critical failure contract, `vision_used` flag for LLM auditability, Pydantic schemas per medallion layer, silver-to-gold null-rate gate, content quality tests |
