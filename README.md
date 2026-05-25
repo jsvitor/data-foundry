@@ -1,4 +1,4 @@
-# Data Foundry — Domínio Público Pipeline
+# Data Foundry
 
 A data pipeline that ingests documents from Brazil's public domain library,
 enriches them with LLM-generated descriptions and translations, and produces
