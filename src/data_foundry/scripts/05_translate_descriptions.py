@@ -1,8 +1,12 @@
 import json
+import os
+from datetime import datetime, timezone
 
 from openai import OpenAI
 
-from data_foundry.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, OUTPUT_DIR
+from data_foundry.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, SILVER_DIR
+
+RUN_ID = os.getenv("RUN_ID", "unknown")
 
 TARGET_LANGUAGES = {"en": "English", "es": "Spanish", "fr": "French"}
 
@@ -29,9 +33,9 @@ def translate_text(text: str, target_lang: str) -> str | None:
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    SILVER_DIR.mkdir(parents=True, exist_ok=True)
 
-    desc_path = OUTPUT_DIR / "descriptions.json"
+    desc_path = SILVER_DIR / "descriptions.json"
     if not desc_path.exists():
         print("descriptions.json not found. Run 03_describe.py first.")
         return
@@ -39,7 +43,7 @@ def main():
     with open(desc_path, encoding="utf-8") as f:
         descriptions = json.load(f)
 
-    trans_path = OUTPUT_DIR / "description_translations.json"
+    trans_path = SILVER_DIR / "description_translations.json"
     if trans_path.exists():
         with open(trans_path, encoding="utf-8") as f:
             translations = json.load(f)
@@ -68,6 +72,12 @@ def main():
             if translated:
                 print(f"  {lang_key}: {translated[:60]}")
 
+        entry_translations["llm_metadata"] = {
+            "model": LLM_MODEL,
+            "base_url": LLM_BASE_URL,
+            "run_id": RUN_ID,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
         translations[code] = entry_translations
 
         with open(trans_path, "w", encoding="utf-8") as f:

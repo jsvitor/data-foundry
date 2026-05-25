@@ -9,6 +9,12 @@ services:
       resources:
         limits:
           memory: 16g
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
   pipeline:
     build: .
@@ -16,7 +22,8 @@ services:
     volumes:
       - ./data:/app/data
     depends_on:
-      - ollama
+      ollama:
+        condition: service_healthy
 
 volumes:
   ollama_data:

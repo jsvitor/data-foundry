@@ -1,28 +1,30 @@
 import json
+from pathlib import Path
 
-from data_foundry.config import OUTPUT_DIR, PDF_DIR
+from data_foundry.config import BRONZE_DIR, GOLD_DIR, PDF_DIR, SILVER_DIR
+from data_foundry.quality import FieldCheck, run_quality_gate
+from data_foundry.schemas.gold import GoldUniversalEntry
 
 
-def load_json(name: str) -> dict | list:
-    path = OUTPUT_DIR / name
+def load_json(path: Path) -> dict | list:
     if path.exists():
         with open(path, encoding="utf-8") as f:
             return json.load(f)
-    return {} if name != "catalog.json" else []
+    return [] if path.name == "catalog.json" else {}
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    GOLD_DIR.mkdir(parents=True, exist_ok=True)
 
-    catalog = load_json("catalog.json")
+    catalog = load_json(BRONZE_DIR / "catalog.json")
     if not catalog:
         print("catalog.json not found. Run 01_download.py first.")
         return
 
-    metadata = load_json("metadata.json")
-    hashes_data = load_json("hashes.json")
+    metadata = load_json(BRONZE_DIR / "metadata.json")
+    hashes_data = load_json(BRONZE_DIR / "hashes.json")
     hashes = hashes_data.get("files", {}) if isinstance(hashes_data, dict) else {}
-    covers = load_json("covers.json")
+    covers = load_json(SILVER_DIR / "covers.json")
 
     metadata_records = []
     for entry in catalog:
@@ -58,7 +60,19 @@ def main():
         }
         metadata_records.append(record)
 
-    output_path = OUTPUT_DIR / "universal_metadata.json"
+    # Quality gate — hard stop when structural or null-rate thresholds breach.
+    run_quality_gate(
+        metadata_records,
+        GoldUniversalEntry,
+        [
+            FieldCheck("download_url", max_null_rate=0.0),   # must always have a URL
+            FieldCheck("document_hash", max_null_rate=0.5),  # depends on download success
+        ],
+        label="universal_metadata",
+        halt_on_failure=True,
+    )
+
+    output_path = GOLD_DIR / "universal_metadata.json"
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(metadata_records, f, ensure_ascii=False, indent=2)
 

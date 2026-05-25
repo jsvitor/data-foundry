@@ -9,8 +9,8 @@ from playwright.sync_api import sync_playwright
 
 from data_foundry.config import (
     BASE_URL,
+    BRONZE_DIR,
     LIST_URL,
-    OUTPUT_DIR,
     PDF_DIR,
 )
 
@@ -25,6 +25,9 @@ def fetch_page(url: str) -> str | None:
     except Exception as e:
         print(f"  curl-cffi failed: {e}")
 
+    # TODO: Add playwright installation in the dockerfile - today it's will return None because  browser-not-found exception
+    #       for this portal, maybe it's not necessary because don't has Cloudflare protection bot detection.
+    # WARN: graceful degradation, system continues to operate with reduced functionality when part of it fails, instead of collapsing completely.
     return fetch_page_playwright(url)
 
 
@@ -44,6 +47,12 @@ def fetch_page_playwright(url: str) -> str | None:
 
 
 def parse_listing(html: str) -> list[dict]:
+    # TODO: [critical] Add more robust parsing with error handling and logging, to detect when page structure changes
+    #       and avoid silent failures with empty results.
+    # in a web scraping context, when a failure occurs (like a network error, a change in the website's structure,
+    # or an unexpected response), instead of crashing the entire script, it should log the error and continue running,
+    # possibly with reduced functionality. 
+    # This way, you can still get partial results and have a record of what went wrong for later debugging.
     soup = BeautifulSoup(html, "html.parser")
     table = soup.find("table", id="res")
     if not table:
@@ -165,9 +174,14 @@ def download_pdf(url: str, filepath: Path) -> bool:
 
 
 def main():
+    # TODO[refactor]: [medium] separate concerns - fetching, parsing, downloading - into different modules/functions for better maintainability and testability.
+    # This will make the code cleaner and easier to manage as it grows, and also allow for better error handling and logging in each step of the process.
+    # For example, you could have a `fetcher.py` for all fetching logic, a `parser.py` for parsing HTML and extracting data, and a `downloader.py` for handling file downloads. The main script would then orchestrate these components without needing to know the details of how they work internally.
+    # Today it's all mixed together here, so this script also has a orchestration responsability - hidden orchestrations.
     PDF_DIR.mkdir(parents=True, exist_ok=True)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
+    BRONZE_DIR.mkdir(parents=True, exist_ok=True)
+    # FIXME: [critical][all functions] It's unaceptable that the script not rise an error on this case
+    #        This can lead to silent failures and data loss
     print("Fetching listing page...")
     html = fetch_page(LIST_URL)
     if not html:
@@ -217,11 +231,11 @@ def main():
 
         catalog.append(entry)
 
-    catalog_path = OUTPUT_DIR / "catalog.json"
+    catalog_path = BRONZE_DIR / "catalog.json"
     with open(catalog_path, "w", encoding="utf-8") as f:
         json.dump(catalog, f, ensure_ascii=False, indent=2)
 
-    metadata_path = OUTPUT_DIR / "metadata.json"
+    metadata_path = BRONZE_DIR / "metadata.json"
     with open(metadata_path, "w", encoding="utf-8") as f:
         json.dump(all_metadata, f, ensure_ascii=False, indent=2)
 

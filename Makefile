@@ -1,10 +1,13 @@
+include .env
+export
+
 .PHONY: setup setup-ollama ollama-up ollama-pull run run-all download hash describe translate translate-descriptions covers localized-catalog universal-metadata test lint
 
 ollama-up:
 	docker compose up -d ollama
 
 ollama-pull:
-	docker compose exec ollama ollama pull gemma4:e2b
+	docker compose exec ollama ollama pull $(LLM_MODEL)
 
 setup:
 	uv sync --group dev

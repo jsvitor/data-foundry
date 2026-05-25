@@ -1,8 +1,12 @@
 import json
+import os
+from datetime import datetime, timezone
 
 from openai import OpenAI
 
-from data_foundry.config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, OUTPUT_DIR
+from data_foundry.config import BRONZE_DIR, LLM_API_KEY, LLM_BASE_URL, LLM_MODEL, SILVER_DIR
+
+RUN_ID = os.getenv("RUN_ID", "unknown")
 
 TARGET_LANGUAGES = {"en": "English", "es": "Spanish", "fr": "French"}
 
@@ -49,9 +53,9 @@ def translate_title(
 
 
 def main():
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    SILVER_DIR.mkdir(parents=True, exist_ok=True)
 
-    catalog_path = OUTPUT_DIR / "catalog.json"
+    catalog_path = BRONZE_DIR / "catalog.json"
     if not catalog_path.exists():
         print("catalog.json not found. Run 01_download.py first.")
         return
@@ -59,14 +63,14 @@ def main():
     with open(catalog_path, encoding="utf-8") as f:
         catalog = json.load(f)
 
-    metadata_path = OUTPUT_DIR / "metadata.json"
+    metadata_path = BRONZE_DIR / "metadata.json"
     if metadata_path.exists():
         with open(metadata_path, encoding="utf-8") as f:
             metadata = json.load(f)
     else:
         metadata = {}
 
-    trans_path = OUTPUT_DIR / "translations.json"
+    trans_path = SILVER_DIR / "translations.json"
     if trans_path.exists():
         with open(trans_path, encoding="utf-8") as f:
             translations = json.load(f)
@@ -98,6 +102,12 @@ def main():
             if translated:
                 print(f"  {lang_key}: {translated[:60]}")
 
+        entry_translations["llm_metadata"] = {
+            "model": LLM_MODEL,
+            "base_url": LLM_BASE_URL,
+            "run_id": RUN_ID,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+        }
         translations[code] = entry_translations
 
         with open(trans_path, "w", encoding="utf-8") as f:
